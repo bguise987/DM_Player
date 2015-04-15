@@ -102,7 +102,7 @@ public class getRemoteData_WebService {
             public void run() {
                 // TODO Auto-generated method stub
                 String jgstr="";
-                String newFilename = fileUrl.substring(fileUrl.lastIndexOf("/")+1);
+                String newFilename = "dim2.txt";
                 newFilename = files_PATH + newFilename;
                 File dirFile = new File(files_PATH);
                 if (!dirFile.exists()) {

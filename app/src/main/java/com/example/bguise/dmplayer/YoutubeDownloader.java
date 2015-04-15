@@ -75,11 +75,13 @@ public class YoutubeDownloader {
                             //String fileName = "FILE.mp4";
                             //String storagePath = Environment.getExternalStorageDirectory().toString();
                             File movie = new File(storagePath, fileName);
+
                             FileInputStream movieStream;
                             FileDescriptor fd;
-                            try{
+                            try {
                                 movieStream = new FileInputStream(movie);
                                 fd = movieStream.getFD();
+
                                 bitmapGrabber.setDataSource(fd);
                                 if (movieStream != null)
                                     movieStream.close();
@@ -106,6 +108,7 @@ public class YoutubeDownloader {
                                     e.printStackTrace();
                                 }
                             }
+
 
                         }
                     }
