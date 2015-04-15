@@ -1,5 +1,6 @@
 package com.example.bguise.dmplayer;
 
+
 import android.content.Intent;
 import android.os.Bundle;
 import android.widget.Toast;
@@ -36,6 +37,9 @@ public class PlayActivity extends YouTubeBaseActivity implements YouTubePlayer.O
                                         boolean wasRestored) {
         if (!wasRestored) {
             player.cueVideo(videoID);
+            // Setup class to download the video & start its worker thread
+            YoutubeDownloader dl = new YoutubeDownloader(videoID);
+            dl.downloadVideo();
         }
     }
 
@@ -48,4 +52,8 @@ public class PlayActivity extends YouTubeBaseActivity implements YouTubePlayer.O
     protected YouTubePlayer.Provider getYouTubePlayerProvider() {
         return (YouTubePlayerView) findViewById(R.id.youtube_player);
     }*/
+
+    public String getVideoID() {
+        return this.videoID;
+    }
 }
