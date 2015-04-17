@@ -17,6 +17,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.support.v7.app.ActionBarActivity;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -118,7 +119,7 @@ public class MainActivity extends ActionBarActivity {
                     search.setType("video");
 
                     // Select which fields we'd like returned
-                    search.setFields("items(id/kind,id/videoId,snippet/title,snippet/thumbnails/default/url)");
+                    search.setFields("items(id/kind,id/videoId,snippet/title,snippet/description,snippet/thumbnails/default/url)");
                     search.setMaxResults(MAX_VIDEOS_RETURNED);
 
                     // Call YouTube Data API
@@ -173,9 +174,9 @@ public class MainActivity extends ActionBarActivity {
                 if (convertView == null) {
                     convertView = getLayoutInflater().inflate(R.layout.video_item, parent, false);
                 }
-                ImageView thumbnail = (ImageView) convertView.findViewById(R.id.video_thumbnail);
-                TextView title = (TextView) convertView.findViewById(R.id.video_title);
-                TextView description = (TextView) convertView.findViewById(R.id.video_description);
+                ImageView thumbnail = (ImageView)convertView.findViewById(R.id.video_thumbnail);
+                TextView title = (TextView)convertView.findViewById(R.id.video_title);
+                TextView description = (TextView)convertView.findViewById(R.id.video_description);
 
                 SearchResultSnippet snippet = resultSnippets.get(pos);
 
