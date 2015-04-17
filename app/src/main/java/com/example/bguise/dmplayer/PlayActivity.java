@@ -29,7 +29,7 @@ public class PlayActivity extends YouTubeBaseActivity implements YouTubePlayer.O
     private YouTubePlayer ytplayer;
     protected int frequency = 1;
     private int initialized = 0;
-    private String name = "name";
+    private String name = "DMSliders";
     private String id = "id";
     private int useDimming = 0;
 
@@ -120,8 +120,8 @@ public class PlayActivity extends YouTubeBaseActivity implements YouTubePlayer.O
     @Override
     protected void onDestroy(){
         super.onDestroy();
+        handler.removeCallbacks(tick);
         if(mBound){
-            mService.unbindService(mConnection);
             mBound = false;
         }
     }
@@ -129,6 +129,7 @@ public class PlayActivity extends YouTubeBaseActivity implements YouTubePlayer.O
     @Override
     protected void onStop(){
         super.onStop();
+        handler.removeCallbacks(tick);
     }
 
     private Runnable tick = new Runnable() {
@@ -152,7 +153,7 @@ public class PlayActivity extends YouTubeBaseActivity implements YouTubePlayer.O
             intent.putExtra("length", length);
             intent.putExtra("frequency", frequency);
             intent.putExtra("id", videoID);
-            intent.putExtra("name", "name");
+            intent.putExtra("name", "DMSliders");
             startService(intent);//starts  service
             initialized = 1;
         }
@@ -176,15 +177,17 @@ public class PlayActivity extends YouTubeBaseActivity implements YouTubePlayer.O
                 intent.putExtra("time", time);
                 intent.putExtra("duration", duration);
                 intent.putExtra("bitmap", bitmap);
-                intent.putExtra("name", "name");
+                intent.putExtra("name", "DMSliders");
 
                 //int bright = mService.handleIntent(intent);
+                // changeBrightness(bright, "From Live");
                 // TODO: Change this back to line above this TODO
                 intent.putExtra("brightness", this.brightnessLevel);
                 int bright = mService.setBrightnessAtTime(intent);
+                changeBrightness(bright, "From Live");
                 // End of demo code
 
-                changeBrightness(bright, "From Live");
+
             }
         }
         else if(useDimming==1){
@@ -205,7 +208,8 @@ public class PlayActivity extends YouTubeBaseActivity implements YouTubePlayer.O
         // lp.screenBrightness =  (int) (brightness*100) / 100.0f;
         //getWindow().setAttributes(lp);
 
-        android.provider.Settings.System.putInt(getContentResolver(), android.provider.Settings.System.SCREEN_BRIGHTNESS, (int) (brightness*100));
+        if(brightness>0&&brightness<100)
+            android.provider.Settings.System.putInt(getContentResolver(), android.provider.Settings.System.SCREEN_BRIGHTNESS, (int) (brightness));
     }
 
 
@@ -224,18 +228,18 @@ public class PlayActivity extends YouTubeBaseActivity implements YouTubePlayer.O
             //if dimming scheme exists
             useDimming = 1;
             frequency = mService.getFrequency();
-            handler.removeCallbacks(tick);
-            handler.postDelayed(tick, 1000 / frequency);
+
         }
         else {
             //if no dimming scheme exists
             useDimming = 0;
         }
-
+        handler.removeCallbacks(tick);
+        handler.postDelayed(tick, 1000 / frequency);
 
         // Setup class to download the video & start its worker thread
-        YoutubeDownloader dl = new YoutubeDownloader(videoID);
-        dl.downloadVideo();
+       // YoutubeDownloader dl = new YoutubeDownloader(videoID);
+       // dl.downloadVideo();
 
     }
 

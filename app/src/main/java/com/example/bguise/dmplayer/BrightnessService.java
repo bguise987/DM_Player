@@ -19,7 +19,7 @@ public class BrightnessService extends IntentService {
     private final Handler handler = new Handler();
     Intent intent;
     Bitmap bm;
-
+    int counter = 0; //for watchdog timer to cause periodic uploads of dimming scheme
     int recently_used;
     int brightness;
 
@@ -139,16 +139,26 @@ public class BrightnessService extends IntentService {
 
     //sets up the information to be displayed by putting in an intent
     private void checkRecentlyUsed() {
-        if (recently_used == 0) {
-            int[] yeah = brightness_values;
-            try {
-                exportData();
-            } catch (IOException e) {
-                e.printStackTrace();
+        counter++;
+        try {
+            exportData();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        if(counter==4) {
+            counter = 0;
+
+            if (recently_used == 0) {
+                int[] yeah = brightness_values;
+                try {
+                    exportData();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+                this.stopSelf();
+            } else {
+                recently_used = 0;
             }
-            // this.stopSelf();
-        } else {
-            recently_used = 0;
         }
         handler.postDelayed(watchDog, 15 * 1000);
     }
@@ -214,11 +224,16 @@ public class BrightnessService extends IntentService {
             }
         }
         bitmap.recycle();
-        return (int) (10000 * (0.299 * (double) (red / pixelCount / 255.0) + 0.587 * (double) (green / pixelCount / 255.0) + .114 * (double) (blue / pixelCount / 255.0)));
+        return (int) (100 * (0.299 * (double) (red / pixelCount / 255.0) + 0.587 * (double) (green / pixelCount / 255.0) + .114 * (double) (blue / pixelCount / 255.0)));
     }
 
     @Override
     public void onDestroy() {
+        try {
+            exportData();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
         handler.removeCallbacks(watchDog);
         super.onDestroy();
     }
@@ -226,22 +241,27 @@ public class BrightnessService extends IntentService {
     public boolean findDimmingScheme(String n, String i){
         String files_PATH = Environment.getExternalStorageDirectory() + "/";
         Downloader downloader = new Downloader(BrightnessService.this, n, i);
-        int counter = 0;
+        int count = 0;
         try {
             downloader.testDownload(n, i);
+            Thread.sleep(5000);
             BufferedReader br = new BufferedReader(new FileReader(files_PATH+"dim2.txt"));
             try {
                 String firstline = br.readLine();
                 String[] parts = firstline.split(",");
                 name = parts[0];
                 id = parts[1];
+                if(id.compareTo(i)!=0){
+                    return false;
+                }
                 frequency = Integer.parseInt(parts[2]);
                 length = Integer.parseInt(parts[3]);
                 brightness_values = new int[length*frequency];
                 String line = br.readLine();
-                while (line != null && counter<brightness_values.length) {
-                    brightness_values[counter]=Integer.parseInt(line);
+                while (line != null && count<brightness_values.length) {
+                    brightness_values[count]=Integer.parseInt(line);
                     line = br.readLine();
+                    count++;
                 }
             } finally {
                 br.close();
