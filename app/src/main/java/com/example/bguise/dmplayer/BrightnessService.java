@@ -73,6 +73,33 @@ public class BrightnessService extends IntentService {
         handleIntent(intent);
     }
 
+    // TODO: Delete this method once bitmap grabbing works, for demo purposes only
+    protected int setBrightnessAtTime(Intent intent) {
+        if (intent.hasExtra("dmtype") == true) {
+            if (intent.getStringExtra("dmtype").compareTo("initialize") == 0) {
+                length = intent.getIntExtra("length", -1);
+                frequency = intent.getIntExtra("frequency", -1);
+                id = intent.getStringExtra("id");
+                name = intent.getStringExtra("name");
+                brightness_values = new int[length * frequency];
+                for (int i = 0; i < length * frequency; i++) {
+                    brightness_values[i] = -1;
+                }
+                startTimer();
+
+            } else {
+                //bm = (Bitmap) intent.getParcelableExtra("bitmap");
+                int time = intent.getIntExtra("time", -1);
+                brightness = intent.getIntExtra("brightness", -1);
+                brightness_values[time * frequency] = brightness;
+
+                recently_used = 1;
+                return brightness;
+            }
+        }
+        return -1;
+    }
+
     protected int handleIntent(Intent intent) {
         if (intent.hasExtra("dmtype") == true) {
             if (intent.getStringExtra("dmtype").compareTo("initialize") == 0) {

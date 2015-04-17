@@ -3,6 +3,7 @@ package com.example.bguise.dmplayer;
 import android.graphics.Bitmap;
 import android.media.MediaMetadataRetriever;
 import android.os.Environment;
+import android.util.Log;
 
 import java.io.File;
 import java.io.FileDescriptor;
@@ -26,10 +27,11 @@ public class YoutubeDownloader {
 
     private static String youtubeID;
     private static final String youtubeAddr = "https://www.youtube.com/watch?v=";
-    private static final String completeURL = youtubeAddr + youtubeID;
+    private static String completeURL;
 
     YoutubeDownloader(String videoid) {
         this.youtubeID = videoid;
+        this.completeURL = this.youtubeAddr + youtubeID;
     }
 
     public static void downloadVideo() {
@@ -46,7 +48,8 @@ public class YoutubeDownloader {
                     URL u = new URL(completeURL);
 
                     is = u.openStream();
-                    HttpURLConnection huc = (HttpURLConnection) u.openConnection(); //to know the size of video
+                    HttpURLConnection huc = (HttpURLConnection) u.openConnection();
+                    //to know the size of video
                     int size = huc.getContentLength();
 
                     if (huc != null) {
@@ -64,52 +67,6 @@ public class YoutubeDownloader {
                         }
                         if (fos != null) {
                             fos.close();
-
-
-                            /*
-                            Attempt to extract Bitmap from downloaded file
-                            */
-
-                            MediaMetadataRetriever bitmapGrabber = new MediaMetadataRetriever();
-
-                            //String fileName = "FILE.mp4";
-                            //String storagePath = Environment.getExternalStorageDirectory().toString();
-                            File movie = new File(storagePath, fileName);
-
-                            FileInputStream movieStream;
-                            FileDescriptor fd;
-                            try {
-                                movieStream = new FileInputStream(movie);
-                                fd = movieStream.getFD();
-
-                                bitmapGrabber.setDataSource(fd);
-                                if (movieStream != null)
-                                    movieStream.close();
-                            } catch (FileNotFoundException e) {
-                                e.printStackTrace();
-                            } catch (IOException io) {
-                                io.printStackTrace();
-                            }
-
-
-                            Bitmap frame = bitmapGrabber.getFrameAtTime(2000000);
-                            FileOutputStream outFile = null;
-                            try {
-                                outFile = new FileOutputStream("Frame.png");
-                                frame.compress(Bitmap.CompressFormat.PNG, 100, outFile);
-                            } catch (FileNotFoundException fnof) {
-                                fnof.printStackTrace();
-                            } finally {
-                                try {
-                                    if (outFile != null) {
-                                        outFile.close();
-                                    }
-                                } catch (IOException e) {
-                                    e.printStackTrace();
-                                }
-                            }
-
-
                         }
                     }
                 } catch (MalformedURLException mue) {
@@ -126,11 +83,55 @@ public class YoutubeDownloader {
                     }
                 }
 
-
-
             }
         });
 
+
+        // Start the download
+        Log.d("YoutubeDownloader", "\tNow starting download of youtube video to FILE.mp4");
+        Log.d("YoutubeDownloader", "\t using URL: " + completeURL);
         thread.start();
+
+        /*
+         * Attempt to extract Bitmap from downloaded file
+         */
+
+//        MediaMetadataRetriever bitmapGrabber = new MediaMetadataRetriever();
+//        String fileName = "FILE.mp4";
+//        String storagePath = Environment.getExternalStorageDirectory().toString();
+//        File movie = new File(storagePath, fileName);
+//
+//        FileInputStream movieStream;
+//        FileDescriptor fd;
+//        try {
+//            movieStream = new FileInputStream(movie);
+//            fd = movieStream.getFD();
+//
+//            bitmapGrabber.setDataSource(fd);
+//            if (movieStream != null)
+//                movieStream.close();
+//        } catch (FileNotFoundException e) {
+//            e.printStackTrace();
+//        } catch (IOException io) {
+//            io.printStackTrace();
+//        }
+//
+//
+//        Bitmap frame = bitmapGrabber.getFrameAtTime(2000000);
+//        FileOutputStream outFile = null;
+//        try {
+//            outFile = new FileOutputStream("Frame.png");
+//            frame.compress(Bitmap.CompressFormat.PNG, 100, outFile);
+//        } catch (FileNotFoundException fnof) {
+//            fnof.printStackTrace();
+//        } finally {
+//            try {
+//                if (outFile != null) {
+//                    outFile.close();
+//                }
+//            } catch (IOException e) {
+//                e.printStackTrace();
+//            }
+//        }
     }
 }

@@ -13,6 +13,7 @@ import com.google.api.services.youtube.model.SearchResult;
 import com.google.api.services.youtube.model.SearchResultSnippet;
 import com.squareup.picasso.Picasso;
 
+import android.content.Context;
 import android.content.Intent;
 import android.support.v7.app.ActionBarActivity;
 import android.os.Bundle;
@@ -20,6 +21,7 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.inputmethod.InputMethodManager;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.EditText;
@@ -32,6 +34,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+import java.util.concurrent.CountDownLatch;
 
 
 public class MainActivity extends ActionBarActivity {
@@ -78,7 +81,16 @@ public class MainActivity extends ActionBarActivity {
 
     /** Called when the user clicks the Search button */
     public void search(View view) {
-        // Create new thread to handle the HTTP request, as Android will not allow this
+        // Hide keyboard on a search
+        InputMethodManager inputManager = (InputMethodManager)
+                getSystemService(Context.INPUT_METHOD_SERVICE);
+
+        inputManager.hideSoftInputFromWindow(getCurrentFocus().getWindowToken(),
+                InputMethodManager.HIDE_NOT_ALWAYS);
+
+        // Latch will allow us to know when thread completes its task
+        final CountDownLatch latch = new CountDownLatch(1);
+        // Create new thread to handle the HTTP request, as Android will not allow this off the main thread
         Thread thread = new Thread(new Runnable() {
             @Override
             public void run() {
@@ -129,19 +141,26 @@ public class MainActivity extends ActionBarActivity {
                 } catch (Throwable t) {
                     t.printStackTrace();
                 }
+                latch.countDown();
             }
         });
 
         //Start thread to execute the YouTube search
         thread.start();
 
-        // Ensure our search() method is called
-        CharSequence text = "Completed YouTube search\nReturned " + numResults + " items";
-        Toast.makeText(getApplicationContext(), text, Toast.LENGTH_LONG).show();
-        // End of confirmation Toast
+        // Wait for thread to complete
+        try {
+            latch.await();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
 
         // Update ListView with current results
         updateVideosFound();
+
+        // Ensure our search() method is called, alert user
+        CharSequence text = "Search returned " + numResults + " items";
+        Toast.makeText(getApplicationContext(), text, Toast.LENGTH_SHORT).show();
     }
 
     private void updateVideosFound() {

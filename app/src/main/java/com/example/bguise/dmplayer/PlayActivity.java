@@ -8,7 +8,9 @@ import android.graphics.Bitmap;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.IBinder;
+import android.util.Log;
 import android.view.View;
+import android.widget.SeekBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -33,6 +35,13 @@ public class PlayActivity extends YouTubeBaseActivity implements YouTubePlayer.O
 
     BrightnessService mService;
     boolean mBound;
+    private SeekBar brightnessControl = null;
+    private int brightnessLevel = 0;
+
+    // Added for seekBar
+    int seek_step = 1;
+    int seek_max = 100;
+    int seek_min = 1;
 
 
     private String videoID;
@@ -75,6 +84,34 @@ public class PlayActivity extends YouTubeBaseActivity implements YouTubePlayer.O
 
         //registerReceiver(broadcastReceiver, new IntentFilter(BrightnessService.ACTION));
 
+
+        brightnessControl = (SeekBar)findViewById(R.id.seekBar);
+        // Ex :
+        // If you want values from 3 to 5 with a step of 0.1 (3, 3.1, 3.2, ..., 5)
+        // this means that you have 21 possible values in the seekbar.
+        // So the range of the seek bar will be [0 ; (5-3)/0.1 = 20].
+        brightnessControl.setMax((seek_max - seek_min) / seek_step);
+
+        brightnessControl.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+            //int progressChanged = 0;
+
+            public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser){
+                brightnessLevel = progress;
+                Log.d("PlayActivity", "Seekbar showing: " + brightnessLevel);
+            }
+
+            public void onStartTrackingTouch(SeekBar seekBar) {
+                // TODO Auto-generated method stub
+            }
+
+            public void onStopTrackingTouch(SeekBar seekBar) {
+                //Toast.makeText(PlayActivity.this,"seek bar progress:"+progressChanged,
+                //        Toast.LENGTH_SHORT).show();
+            }
+        });
+
+
+
         Intent intent = getIntent();
         videoID = intent.getStringExtra("VIDEO_ID");
 
@@ -107,6 +144,7 @@ public class PlayActivity extends YouTubeBaseActivity implements YouTubePlayer.O
         if(ytplayer!=null && ytplayer.isPlaying()!=true){
             return;
         }
+        // Sets up brightness service so it can continue running & produce values
         else if(useDimming==0 && initialized == 0){
             int length = (int) (ytplayer.getDurationMillis()/1000);
             intent = new Intent(this, BrightnessService.class);
@@ -118,6 +156,7 @@ public class PlayActivity extends YouTubeBaseActivity implements YouTubePlayer.O
             startService(intent);//starts  service
             initialized = 1;
         }
+        // Feeds new brightness levels to produce the dimming scheme (making the scheme)
         else if(useDimming==0){
             int duration = ytplayer.getDurationMillis();
             int time = ytplayer.getCurrentTimeMillis();
@@ -139,7 +178,12 @@ public class PlayActivity extends YouTubeBaseActivity implements YouTubePlayer.O
                 intent.putExtra("bitmap", bitmap);
                 intent.putExtra("name", "name");
 
-                int bright = mService.handleIntent(intent);
+                //int bright = mService.handleIntent(intent);
+                // TODO: Change this back to line above this TODO
+                intent.putExtra("brightness", this.brightnessLevel);
+                int bright = mService.setBrightnessAtTime(intent);
+                // End of demo code
+
                 changeBrightness(bright, "From Live");
             }
         }
@@ -156,14 +200,12 @@ public class PlayActivity extends YouTubeBaseActivity implements YouTubePlayer.O
     private void changeBrightness(int brightness, String extra) {
         TextView text = (TextView) findViewById(R.id.textView);
         text.setText("Brightness: "+(brightness)+" "+extra);
+        // TODO: Uncomment- this actually changes brightness
         // WindowManager.LayoutParams lp = getWindow().getAttributes();
         // lp.screenBrightness =  (int) (brightness*100) / 100.0f;
         //getWindow().setAttributes(lp);
-        // MyAsyncTask task = new MyAsyncTask();
-        // task.setContext(this);
-        // task.execute( (Integer) ((int) (brightness*100)));
 
-        //android.provider.Settings.System.putInt(getContentResolver(), android.provider.Settings.System.SCREEN_BRIGHTNESS, (int) (brightness*100));
+        android.provider.Settings.System.putInt(getContentResolver(), android.provider.Settings.System.SCREEN_BRIGHTNESS, (int) (brightness*100));
     }
 
 
@@ -178,7 +220,7 @@ public class PlayActivity extends YouTubeBaseActivity implements YouTubePlayer.O
         ytplayer = player;
 
         //check for dimming scheme
-        if(mService.findDimmingScheme(name, id)) {
+        if(mService.findDimmingScheme(name, videoID)) {
             //if dimming scheme exists
             useDimming = 1;
             frequency = mService.getFrequency();
